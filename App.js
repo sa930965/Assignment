@@ -1,111 +1,119 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const getTravelRoute = (tickets, startCity) => {
+  const route = [];
+  const ticketMap = new Map();
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+  tickets.forEach(([from, to]) => {
+    if (!ticketMap.has(from)) {
+      ticketMap.set(from, []);
+    }
+    ticketMap.get(from).push(to);
+  });
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const findRoute = (currentCity) => {
+    route.push(currentCity);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    if (ticketMap.has(currentCity)) {
+      const destinations = ticketMap.get(currentCity);
+
+      destinations.sort();
+
+      for (const destination of destinations) {
+        ticketMap.set(
+          currentCity,
+          destinations.filter((d) => d !== destination)
+        );
+
+        findRoute(destination);
+      }
+    }
   };
 
+  findRoute(startCity);
+  return route;
+};
+
+const App = () => {
+  const tickets = [
+    ["Paris", "Skopje"],
+    ["Zurich", "Amsterdam"],
+    ["Prague", "Zurich"],
+    ["Barcelona", "Berlin"],
+    ["Kiev", "Prague"],
+    ["Skopje", "Paris"],
+    ["Amsterdam", "Barcelona"],
+    ["Berlin", "Kiev"],
+    ["Berlin", "Amsterdam"],
+  ];
+
+  const startCity = "Kiev";
+  const travelRoute = getTravelRoute(tickets, startCity);
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Your Travel Route</Text>
+      {travelRoute.map((city, index) => (
+        <View key={index} style={styles.routeItem}>
+          <View style={styles.iconContainer}>
+            <Icon name="map-marker" size={24} color="#FF6F61" />
+            {index < travelRoute.length - 1 && (
+              <View style={styles.line}></View>
+            )}
+          </View>
+          <View style={styles.cityContainer}>
+            <Text style={styles.cityText}>{city}</Text>
+          </View>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      ))}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#f7f9fc",
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  routeItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
   },
-  highlight: {
-    fontWeight: '700',
+  iconContainer: {
+    alignItems: "center",
+    marginRight: 15,
+  },
+  line: {
+    width: 2,
+    height: 40,
+    backgroundColor: "#FF6F61",
+    marginTop: 5,
+  },
+  cityContainer: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  cityText: {
+    fontSize: 20,
+    color: "#555",
   },
 });
 
